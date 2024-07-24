@@ -11,3 +11,18 @@ go run ./cmd/api
 ```
 
 The gateway leverages Docker's DNS to proxy requests to corresponding services by their container names. It is also equipped with middlewares for authorization, TLS, and HTTP logger.
+
+## Integration
+
+This gateway uses Fiber's `Proxy` middleware, so all you need to do is catch all routes after your service's domain using a wildcard:
+
+```go
+app.All("<url_in_gateway>", func(c *fiber.Ctx) error {
+    targetURL := "<target_url>" + c.OriginalURL()[len("<url_in_gateway>"):]
+    if err := proxy.Do(c, targetURL); err != nil {
+      return err
+    }
+    c.Response().Header.Del(fiber.HeaderServer)
+    return nil
+})
+```
